@@ -9,6 +9,17 @@ const defaultStudyTypes = [
   { value: 'social', label: '社会', color: '#ef4444' },
 ]
 
+const palette = [
+  '#f59e0b',
+  '#3b82f6',
+  '#10b981',
+  '#8b5cf6',
+  '#ef4444',
+  '#14b8a6',
+  '#f97316',
+  '#ec4899',
+]
+
 const initialLogs = [
   { date: '2026-06-18', subject: 'math', minutes: 45 },
   { date: '2026-06-19', subject: 'english', minutes: 30 },
@@ -47,7 +58,7 @@ function App() {
   const [selectedSubject, setSelectedSubject] = useState(defaultStudyTypes[0].value)
   const [minutes, setMinutes] = useState('30')
   const [newStudyLabel, setNewStudyLabel] = useState('')
-  const [newStudyColor, setNewStudyColor] = useState('#64748b')
+  const [pickedColor, setPickedColor] = useState(palette[0])
 
   const studyTypeMap = useMemo(
     () => buildStudyTypeMap(studyTypes),
@@ -121,7 +132,7 @@ function App() {
 
     setStudyTypes((current) => [
       ...current,
-      { value, label, color: newStudyColor },
+      { value, label, color: pickedColor },
     ])
     setSelectedSubject(value)
     setNewStudyLabel('')
@@ -222,7 +233,7 @@ function App() {
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: '1fr 120px auto',
+                gridTemplateColumns: '1fr auto',
                 gap: '8px',
               }}
             >
@@ -239,24 +250,32 @@ function App() {
                   minWidth: 0,
                 }}
               />
-              <input
-                type="color"
-                value={newStudyColor}
-                onChange={(event) => setNewStudyColor(event.target.value)}
-                aria-label="勉強の色"
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  minHeight: '48px',
-                  borderRadius: '12px',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  background: 'transparent',
-                  padding: '4px',
-                }}
-              />
               <button type="submit" className="primary-action">
                 追加
               </button>
+            </div>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {palette.map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  aria-label={`色 ${color}`}
+                  onClick={() => setPickedColor(color)}
+                  style={{
+                    width: '34px',
+                    height: '34px',
+                    borderRadius: '999px',
+                    border: pickedColor === color ? '3px solid white' : '2px solid rgba(255,255,255,0.22)',
+                    background: color,
+                    cursor: 'pointer',
+                    boxShadow: pickedColor === color ? '0 0 0 2px rgba(255,255,255,0.12)' : 'none',
+                  }}
+                />
+              ))}
+              <span style={{ alignSelf: 'center', color: 'rgba(244,247,251,0.7)' }}>
+                選択中の色
+              </span>
             </div>
           </form>
         </div>
@@ -322,27 +341,9 @@ function App() {
                 <div style={{ color: 'rgba(244,247,251,0.65)', fontSize: '0.8rem' }}>
                   {item.date.slice(5)}
                 </div>
-                <div
-                  style={{
-                    marginTop: '10px',
-                    height: '80px',
-                    display: 'flex',
-                    alignItems: 'end',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '100%',
-                      maxWidth: '28px',
-                      height: `${Math.max(item.minutes * 2, 8)}px`,
-                      minHeight: '8px',
-                      borderRadius: '999px',
-                      background: item.minutes > 0 ? selectedSubjectColor : 'rgba(255,255,255,0.14)',
-                    }}
-                  />
+                <div style={{ marginTop: '12px', fontWeight: 700 }}>
+                  {item.minutes}分
                 </div>
-                <div style={{ marginTop: '10px', fontWeight: 700 }}>{item.minutes}分</div>
               </div>
             ))}
           </div>
