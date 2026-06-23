@@ -1,16 +1,26 @@
-# React + Vite
+# study-app
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+学習の進捗と今日のタスクをまとめて管理する、小さな学習ダッシュボードです。
 
-Currently, two official plugins are available:
+## 概要
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- 今日やることを一覧で確認
+- 完了状況をワンタップで切り替え
+- 集中時間の目安を表示
 
-## React Compiler
+## 開発
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm install
+npm run dev
+```
 
-## Expanding the ESLint configuration
+## ビルド
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm run build
+```
+
+## 公開
+
+GitHub Pages 用のビルド設定を入れてあるので、`study-app` リポジトリの Pages 設定で GitHub Actions を有効にすれば公開できます。

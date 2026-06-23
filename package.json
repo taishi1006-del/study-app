@@ -1,5 +1,6 @@
 {
   "name": "study-app",
+  "description": "A small study dashboard built with React and Vite.",
   "private": true,
   "version": "0.0.0",
   "type": "module",
