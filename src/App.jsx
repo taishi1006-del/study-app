@@ -187,6 +187,21 @@ function App() {
     setNewStudyLabel('')
   }
 
+  const handleDeleteStudyType = (value) => {
+    setStudyTypes((current) => {
+      if (current.length <= 1) return current
+
+      const nextStudyTypes = current.filter((item) => item.value !== value)
+      if (nextStudyTypes.length === current.length) return current
+
+      setSelectedSubject((currentSelected) =>
+        currentSelected === value ? nextStudyTypes[0].value : currentSelected,
+      )
+
+      return nextStudyTypes
+    })
+  }
+
   const startTimer = () => {
     if (timerDisplaySeconds <= 0) return
     if (!timerRunning) setTimerRunning(true)
@@ -541,8 +556,33 @@ function App() {
             <p>色分けされた種類</p>
             <ul>
               {studyTypes.map((item) => (
-                <li key={item.value} style={{ color: item.color }}>
-                  {item.label}
+                <li
+                  key={item.value}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '10px',
+                    color: item.color,
+                  }}
+                >
+                  <span>{item.label}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteStudyType(item.value)}
+                    aria-label={`${item.label}を削除`}
+                    style={{
+                      border: '1px solid rgba(255,255,255,0.15)',
+                      background: 'rgba(255,255,255,0.06)',
+                      color: 'rgba(244,247,251,0.9)',
+                      borderRadius: '999px',
+                      padding: '4px 10px',
+                      fontSize: '0.78rem',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    削除
+                  </button>
                 </li>
               ))}
             </ul>
