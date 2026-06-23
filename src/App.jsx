@@ -51,6 +51,15 @@ const getLast7Days = () => {
   })
 }
 
+const getReadableTextColor = (hexColor) => {
+  const hex = hexColor.replace('#', '')
+  const r = Number.parseInt(hex.slice(0, 2), 16)
+  const g = Number.parseInt(hex.slice(2, 4), 16)
+  const b = Number.parseInt(hex.slice(4, 6), 16)
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000
+  return brightness > 155 ? '#07111f' : '#ffffff'
+}
+
 function App() {
   const [studyTypes, setStudyTypes] = useState(defaultStudyTypes)
   const [logs, setLogs] = useState(initialLogs)
@@ -60,17 +69,7 @@ function App() {
   const [newStudyLabel, setNewStudyLabel] = useState('')
   const [pickedColor, setPickedColor] = useState(palette[0])
 
-  const studyTypeMap = useMemo(
-    () => buildStudyTypeMap(studyTypes),
-    [studyTypes],
-  )
-
-  const subjectMinutes = useMemo(() => {
-    return logs.reduce((acc, log) => {
-      acc[log.subject] = (acc[log.subject] ?? 0) + log.minutes
-      return acc
-    }, {})
-  }, [logs])
+  const studyTypeMap = useMemo(() => buildStudyTypeMap(studyTypes), [studyTypes])
 
   const totalMinutes = useMemo(
     () => logs.reduce((sum, log) => sum + log.minutes, 0),
@@ -104,8 +103,6 @@ function App() {
     })
   }, [logs])
 
-  const selectedSubjectLabel =
-    studyTypeMap[selectedSubject]?.label ?? selectedSubject
   const selectedSubjectColor =
     studyTypeMap[selectedSubject]?.color ?? '#64748b'
 
@@ -159,9 +156,10 @@ function App() {
 
           <form
             onSubmit={handleAddLog}
-            style={{ display: 'grid', gap: '10px', maxWidth: '520px' }}
+            style={{ display: 'grid', gap: '10px', maxWidth: '560px' }}
           >
             <span className="section-label">カレンダー入力</span>
+
             <div
               style={{
                 display: 'grid',
@@ -182,24 +180,6 @@ function App() {
                   minWidth: 0,
                 }}
               />
-              <select
-                value={selectedSubject}
-                onChange={(event) => setSelectedSubject(event.target.value)}
-                style={{
-                  borderRadius: '12px',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  background: 'rgba(255,255,255,0.05)',
-                  color: 'inherit',
-                  padding: '12px 14px',
-                  minWidth: 0,
-                }}
-              >
-                {studyTypes.map((item) => (
-                  <option key={item.value} value={item.value}>
-                    {item.label}
-                  </option>
-                ))}
-              </select>
               <input
                 type="number"
                 min="1"
@@ -220,14 +200,46 @@ function App() {
                 追加
               </button>
             </div>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {studyTypes.map((item) => {
+                const isActive = item.value === selectedSubject
+                const textColor = getReadableTextColor(item.color)
+                return (
+                  <button
+                    key={item.value}
+                    type="button"
+                    onClick={() => setSelectedSubject(item.value)}
+                    aria-pressed={isActive}
+                    style={{
+                      border: isActive
+                        ? `2px solid ${item.color}`
+                        : '1px solid rgba(255,255,255,0.15)',
+                      background: item.color,
+                      color: textColor,
+                      borderRadius: '999px',
+                      padding: '10px 14px',
+                      cursor: 'pointer',
+                      boxShadow: isActive
+                        ? `0 0 0 3px ${item.color}33`
+                        : 'none',
+                      transform: isActive ? 'translateY(-1px)' : 'none',
+                    }}
+                  >
+                    {item.label}
+                  </button>
+                )
+              })}
+            </div>
+
             <small style={{ color: 'rgba(244,247,251,0.7)' }}>
-              入力した日付ごとに集計され、学習時間と学習日数に反映されます。
+              選んだ種類ごとに、その日の学習時間として記録されます。
             </small>
           </form>
 
           <form
             onSubmit={handleAddStudyType}
-            style={{ display: 'grid', gap: '10px', maxWidth: '520px' }}
+            style={{ display: 'grid', gap: '10px', maxWidth: '560px' }}
           >
             <span className="section-label">勉強の種類を追加</span>
             <div
@@ -266,10 +278,16 @@ function App() {
                     width: '34px',
                     height: '34px',
                     borderRadius: '999px',
-                    border: pickedColor === color ? '3px solid white' : '2px solid rgba(255,255,255,0.22)',
+                    border:
+                      pickedColor === color
+                        ? '3px solid white'
+                        : '2px solid rgba(255,255,255,0.22)',
                     background: color,
                     cursor: 'pointer',
-                    boxShadow: pickedColor === color ? '0 0 0 2px rgba(255,255,255,0.12)' : 'none',
+                    boxShadow:
+                      pickedColor === color
+                        ? '0 0 0 2px rgba(255,255,255,0.12)'
+                        : 'none',
                   }}
                 />
               ))}
@@ -355,6 +373,10 @@ function App() {
               .slice(0, 6)
               .map((log, index) => {
                 const subject = studyTypeMap[log.subject]
+                const chipTextColor = subject
+                  ? getReadableTextColor(subject.color)
+                  : '#07111f'
+
                 return (
                   <li
                     key={`${log.date}-${log.subject}-${index}`}
@@ -368,7 +390,7 @@ function App() {
                       className="task-toggle"
                       style={{
                         background: subject ? subject.color : '#d8e7ff',
-                        color: '#07111f',
+                        color: chipTextColor,
                       }}
                     >
                       {subject?.label ?? log.subject}
@@ -385,15 +407,17 @@ function App() {
 
         <aside className="panel panel-side">
           <p className="section-label">Focus</p>
-          <h2>今選んでいる種類</h2>
+          <h2>数字で見える化</h2>
           <p className="side-copy">
-            いまは <strong style={{ color: selectedSubjectColor }}>{selectedSubjectLabel}</strong>{' '}
-            を基準に表示しています。種類ごとの色で見分けやすくしています。
+            学習記録は数字だけでまとめています。種類の色は、文字が見やすいように自動で反転します。
           </p>
 
           <div
             className="focus-box"
-            style={{ borderColor: `${selectedSubjectColor}55`, background: `${selectedSubjectColor}18` }}
+            style={{
+              borderColor: `${selectedSubjectColor}55`,
+              background: `${selectedSubjectColor}18`,
+            }}
           >
             <span>合計の見え方</span>
             <strong>{formatMinutes(totalMinutes)}</strong>
