@@ -125,6 +125,21 @@ function App() {
     })
   }, [logs])
 
+  const recentLogs = useMemo(() => {
+    return logs
+      .slice()
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .slice(0, 6)
+  }, [logs])
+
+  const selectedSubjectLogs = useMemo(() => {
+    return logs
+      .filter((log) => log.subject === selectedSubject)
+      .slice()
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .slice(0, 5)
+  }, [logs, selectedSubject])
+
   const subjectSummary = useMemo(() => {
     return logs.reduce((acc, log) => {
       acc[log.subject] = (acc[log.subject] ?? 0) + log.minutes
@@ -609,77 +624,179 @@ function App() {
             </div>
           </div>
 
-          <div className="progress-bar" aria-hidden="true">
-            <span style={{ width: `${progress}%`, background: selectedSubjectColor }} />
+          <div
+            style={{
+              display: 'grid',
+              gap: '10px',
+              marginBottom: '18px',
+            }}
+          >
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
+                gap: '10px',
+              }}
+            >
+              {['月', '火', '水', '木', '金', '土', '日'].map((label) => (
+                <div
+                  key={label}
+                  style={{
+                    textAlign: 'center',
+                    color: 'rgba(244,247,251,0.6)',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                  }}
+                >
+                  {label}
+                </div>
+              ))}
+            </div>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
+                gap: '10px',
+              }}
+            >
+              {weeklySummary.map((item) => {
+                const isToday = item.date === selectedDate
+                return (
+                  <div
+                    key={item.date}
+                    style={{
+                      borderRadius: '18px',
+                      padding: '12px 10px',
+                      background: isToday
+                        ? `${selectedSubjectColor}18`
+                        : 'rgba(255,255,255,0.04)',
+                      border: isToday
+                        ? `1px solid ${selectedSubjectColor}55`
+                        : '1px solid rgba(255,255,255,0.08)',
+                      minHeight: '96px',
+                      display: 'grid',
+                      alignContent: 'space-between',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
+                      <div style={{ color: 'rgba(244,247,251,0.7)', fontSize: '0.8rem' }}>
+                        {item.date.slice(5)}
+                      </div>
+                      {isToday ? (
+                        <span
+                          style={{
+                            fontSize: '0.72rem',
+                            color: selectedSubjectColor,
+                            fontWeight: 700,
+                          }}
+                        >
+                          今日
+                        </span>
+                      ) : null}
+                    </div>
+                    <div style={{ marginTop: '12px', fontWeight: 800, fontSize: '1.15rem' }}>
+                      {item.minutes}分
+                    </div>
+                    <div
+                      style={{
+                        marginTop: '8px',
+                        height: '6px',
+                        borderRadius: '999px',
+                        background: 'rgba(255,255,255,0.08)',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: 'block',
+                          height: '100%',
+                          width: `${Math.min(100, item.minutes * 2)}%`,
+                          background: item.minutes > 0 ? selectedSubjectColor : 'transparent',
+                        }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
 
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
-              gap: '10px',
-              marginBottom: '20px',
+              gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+              gap: '14px',
             }}
           >
-            {weeklySummary.map((item) => (
-              <div
-                key={item.date}
-                style={{
-                  borderRadius: '16px',
-                  padding: '12px 10px',
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  textAlign: 'center',
-                }}
-              >
-                <div style={{ color: 'rgba(244,247,251,0.65)', fontSize: '0.8rem' }}>
-                  {item.date.slice(5)}
-                </div>
-                <div style={{ marginTop: '12px', fontWeight: 700 }}>
-                  {item.minutes}分
-                </div>
-              </div>
-            ))}
-          </div>
+            <div className="schedule-box" style={{ margin: 0 }}>
+              <p>直近のタスク</p>
+              <ul>
+                {recentLogs.map((log, index) => {
+                  const subject = studyTypeMap[log.subject]
+                  const chipTextColor = subject ? getReadableTextColor(subject.color) : '#07111f'
 
-          <ul className="task-list">
-            {logs
-              .slice()
-              .sort((a, b) => b.date.localeCompare(a.date))
-              .slice(0, 6)
-              .map((log, index) => {
-                const subject = studyTypeMap[log.subject]
-                const chipTextColor = subject
-                  ? getReadableTextColor(subject.color)
-                  : '#07111f'
-
-                return (
-                  <li
-                    key={`${log.date}-${log.subject}-${index}`}
-                    className="task"
-                    style={{
-                      borderColor: subject ? `${subject.color}55` : 'rgba(255,255,255,0.08)',
-                    }}
-                  >
-                    <button
-                      type="button"
-                      className="task-toggle"
+                  return (
+                    <li
+                      key={`${log.date}-${log.subject}-${index}`}
                       style={{
-                        background: subject ? subject.color : '#d8e7ff',
-                        color: chipTextColor,
+                        color: subject?.color ?? '#ffffff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        justifyContent: 'space-between',
                       }}
                     >
-                      {subject?.label ?? log.subject}
-                    </button>
-                    <div>
-                      <h3>{log.date}</h3>
-                      <p>{formatMinutes(log.minutes)} 学習</p>
-                    </div>
-                  </li>
-                )
-              })}
-          </ul>
-        </article>
+                      <span style={{ minWidth: 0 }}>
+                        {log.date} - {subject?.label ?? log.subject}
+                      </span>
+                      <span
+                        style={{
+                          color: chipTextColor,
+                          background: subject ? subject.color : '#d8e7ff',
+                          borderRadius: '999px',
+                          padding: '4px 10px',
+                          fontSize: '0.8rem',
+                          fontWeight: 700,
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {formatMinutes(log.minutes)}
+                      </span>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+
+            <div className="schedule-box" style={{ margin: 0 }}>
+              <p>選択中のタスク</p>
+              <ul>
+                {selectedSubjectLogs.length > 0 ? (
+                  selectedSubjectLogs.map((log, index) => {
+                    const subject = studyTypeMap[log.subject]
+                    return (
+                      <li
+                        key={`${log.date}-${log.subject}-${index}`}
+                        style={{
+                          color: subject?.color ?? '#ffffff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '10px',
+                        }}
+                      >
+                        <span>{log.date}</span>
+                        <span>{formatMinutes(log.minutes)}</span>
+                      </li>
+                    )
+                  })
+                ) : (
+                  <li style={{ color: 'rgba(244,247,251,0.7)' }}>この種類の記録はまだありません。</li>
+                )}
+              </ul>
+            </div>
+          </div>        </article>
 
         <aside className="panel panel-side">
           <p className="section-label">Subject</p>
