@@ -85,6 +85,8 @@ function App() {
   const [pickedColor, setPickedColor] = useState(palette[0])
   const [goalHours, setGoalHours] = useState('5')
   const [goalMins, setGoalMins] = useState('0')
+  const [timerHours, setTimerHours] = useState('0')
+  const [timerMins, setTimerMins] = useState('25')
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [timerRunning, setTimerRunning] = useState(false)
   const timerRef = useRef(null)
@@ -137,17 +139,27 @@ function App() {
   const goalMinutes = parseGoalMinutes(goalHours, goalMins)
   const progress = Math.min(100, Math.round((totalMinutes / goalMinutes) * 100))
 
+  const timerTargetSeconds = parseGoalMinutes(timerHours, timerMins) * 60
+  const timerDisplaySeconds = Math.max(0, timerTargetSeconds - elapsedSeconds)
+
   useEffect(() => {
     if (!timerRunning) return undefined
 
     timerRef.current = window.setInterval(() => {
-      setElapsedSeconds((current) => current + 1)
+      setElapsedSeconds((current) => {
+        if (current + 1 >= timerTargetSeconds) {
+          window.clearInterval(timerRef.current)
+          setTimerRunning(false)
+          return timerTargetSeconds
+        }
+        return current + 1
+      })
     }, 1000)
 
     return () => {
       window.clearInterval(timerRef.current)
     }
-  }, [timerRunning])
+  }, [timerRunning, timerTargetSeconds])
 
   const handleAddLog = (event) => {
     event.preventDefault()
@@ -176,6 +188,7 @@ function App() {
   }
 
   const startTimer = () => {
+    if (timerDisplaySeconds <= 0) return
     if (!timerRunning) setTimerRunning(true)
   }
 
@@ -363,8 +376,49 @@ function App() {
           >
             <span>勉強タイマー</span>
             <strong style={{ fontSize: '2rem', letterSpacing: '0.05em' }}>
-              {formatTimer(elapsedSeconds)}
+              {formatTimer(timerDisplaySeconds)}
             </strong>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '8px', alignItems: 'center' }}>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={timerHours}
+                onChange={(event) => setTimerHours(event.target.value)}
+                placeholder="h"
+                style={{
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  background: 'rgba(255,255,255,0.05)',
+                  color: 'inherit',
+                  padding: '12px 14px',
+                }}
+              />
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={timerMins}
+                onChange={(event) => setTimerMins(event.target.value)}
+                placeholder="min"
+                style={{
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  background: 'rgba(255,255,255,0.05)',
+                  color: 'inherit',
+                  padding: '12px 14px',
+                }}
+              />
+              <div
+                style={{
+                  color: 'rgba(244,247,251,0.75)',
+                  whiteSpace: 'nowrap',
+                  fontWeight: 700,
+                }}
+              >
+                {formatGoalLabel(timerHours, timerMins)}
+              </div>
+            </div>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <button
                 type="button"
@@ -491,20 +545,6 @@ function App() {
                   {item.label}
                 </li>
               ))}
-            </ul>
-          </div>
-
-          <div className="schedule-box">
-            <p>学習時間の内訳</p>
-            <ul>
-              {Object.entries(subjectSummary).map(([subject, minutesValue]) => {
-                const item = studyTypeMap[subject]
-                return (
-                  <li key={subject} style={{ color: item?.color ?? '#ffffff' }}>
-                    {item?.label ?? subject} - {formatMinutes(minutesValue)}
-                  </li>
-                )
-              })}
             </ul>
           </div>
         </aside>
