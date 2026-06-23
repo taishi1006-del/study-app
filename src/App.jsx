@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+﻿import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 
 const defaultStudyTypes = [
@@ -139,6 +139,31 @@ function App() {
       .sort((a, b) => b.date.localeCompare(a.date))
       .slice(0, 5)
   }, [logs, selectedSubject])
+
+  const monthlyCalendar = useMemo(() => {
+    const baseDate = new Date(`${selectedDate}T00:00:00`)
+    const monthStart = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1)
+    const startOffset = monthStart.getDay()
+    const gridStart = new Date(monthStart)
+    gridStart.setDate(monthStart.getDate() - startOffset)
+
+    return Array.from({ length: 42 }, (_, index) => {
+      const day = new Date(gridStart)
+      day.setDate(gridStart.getDate() + index)
+      const date = day.toISOString().slice(0, 10)
+      const dayMinutes = logs
+        .filter((log) => log.date === date)
+        .reduce((sum, log) => sum + log.minutes, 0)
+
+      return {
+        date,
+        dayNumber: day.getDate(),
+        minutes: dayMinutes,
+        inMonth: day.getMonth() === monthStart.getMonth(),
+        isToday: date === selectedDate,
+      }
+    })
+  }, [logs, selectedDate])
 
   const subjectSummary = useMemo(() => {
     return logs.reduce((acc, log) => {
@@ -657,68 +682,106 @@ function App() {
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
-                gap: '10px',
+                gap: '8px',
+                marginBottom: '8px',
               }}
             >
-              {weeklySummary.map((item) => {
-                const isToday = item.date === selectedDate
-                return (
-                  <div
-                    key={item.date}
-                    style={{
-                      borderRadius: '18px',
-                      padding: '12px 10px',
-                      background: isToday
-                        ? `${selectedSubjectColor}18`
-                        : 'rgba(255,255,255,0.04)',
-                      border: isToday
-                        ? `1px solid ${selectedSubjectColor}55`
-                        : '1px solid rgba(255,255,255,0.08)',
-                      minHeight: '96px',
-                      display: 'grid',
-                      alignContent: 'space-between',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
-                      <div style={{ color: 'rgba(244,247,251,0.7)', fontSize: '0.8rem' }}>
-                        {item.date.slice(5)}
-                      </div>
-                      {isToday ? (
-                        <span
-                          style={{
-                            fontSize: '0.72rem',
-                            color: selectedSubjectColor,
-                            fontWeight: 700,
-                          }}
-                        >
-                          今日
-                        </span>
-                      ) : null}
-                    </div>
-                    <div style={{ marginTop: '12px', fontWeight: 800, fontSize: '1.15rem' }}>
-                      {item.minutes}分
-                    </div>
-                    <div
+              {['日', '月', '火', '水', '木', '金', '土'].map((label) => (
+                <div
+                  key={label}
+                  style={{
+                    textAlign: 'center',
+                    color: 'rgba(244,247,251,0.55)',
+                    fontSize: '0.76rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.06em',
+                  }}
+                >
+                  {label}
+                </div>
+              ))}
+            </div>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
+                gap: '8px',
+              }}
+            >
+              {monthlyCalendar.map((item) => (
+                <button
+                  key={item.date}
+                  type="button"
+                  onClick={() => setSelectedDate(item.date)}
+                  style={{
+                    minHeight: '104px',
+                    borderRadius: '18px',
+                    border: item.isToday
+                      ? `1px solid ${selectedSubjectColor}88`
+                      : item.inMonth
+                        ? '1px solid rgba(255,255,255,0.08)'
+                        : '1px solid rgba(255,255,255,0.04)',
+                    background: item.isToday
+                      ? `${selectedSubjectColor}18`
+                      : item.inMonth
+                        ? 'rgba(255,255,255,0.045)'
+                        : 'rgba(255,255,255,0.02)',
+                    color: 'inherit',
+                    padding: '10px 10px 8px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    opacity: item.inMonth ? 1 : 0.45,
+                    boxShadow: item.isToday ? `0 0 0 3px ${selectedSubjectColor}22` : 'none',
+                    display: 'grid',
+                    alignContent: 'space-between',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
+                    <span
                       style={{
-                        marginTop: '8px',
-                        height: '6px',
-                        borderRadius: '999px',
-                        background: 'rgba(255,255,255,0.08)',
-                        overflow: 'hidden',
+                        fontSize: '0.78rem',
+                        fontWeight: 700,
+                        color: item.isToday ? selectedSubjectColor : 'rgba(244,247,251,0.85)',
                       }}
                     >
+                      {item.dayNumber}
+                    </span>
+                    {item.minutes > 0 ? (
                       <span
                         style={{
-                          display: 'block',
-                          height: '100%',
-                          width: `${Math.min(100, item.minutes * 2)}%`,
-                          background: item.minutes > 0 ? selectedSubjectColor : 'transparent',
+                          fontSize: '0.68rem',
+                          color: selectedSubjectColor,
+                          fontWeight: 700,
                         }}
-                      />
-                    </div>
+                      >
+                        {formatMinutes(item.minutes)}
+                      </span>
+                    ) : null}
                   </div>
-                )
-              })}
+                  <div
+                    style={{
+                      marginTop: '8px',
+                      height: '8px',
+                      borderRadius: '999px',
+                      background: 'rgba(255,255,255,0.08)',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <span
+                      style={{
+                        display: 'block',
+                        height: '100%',
+                        width: `${Math.min(100, item.minutes * 2)}%`,
+                        background: item.minutes > 0 ? selectedSubjectColor : 'transparent',
+                      }}
+                    />
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'rgba(244,247,251,0.7)' }}>
+                    {item.inMonth ? (item.isToday ? '選択中' : '学習あり') : '月外'}
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
 
@@ -770,7 +833,7 @@ function App() {
             </div>
 
             <div className="schedule-box" style={{ margin: 0 }}>
-              <p>選択中のタスク</p>
+              <p>選択中の日のタスク</p>
               <ul>
                 {selectedSubjectLogs.length > 0 ? (
                   selectedSubjectLogs.map((log, index) => {
@@ -796,7 +859,8 @@ function App() {
                 )}
               </ul>
             </div>
-          </div>        </article>
+          </div>
+        </article>
 
         <aside className="panel panel-side">
           <p className="section-label">Subject</p>
