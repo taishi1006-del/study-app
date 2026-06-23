@@ -31,6 +31,12 @@ const focusSessions = [
   { label: '今週の目標', value: '10h' },
 ]
 
+const upcomingStudy = [
+  '19:00 - React の復習',
+  '20:00 - アルゴリズム問題',
+  '21:00 - 英単語チェック',
+]
+
 function App() {
   const [tasks, setTasks] = useState(defaultTasks)
   const completedCount = useMemo(
@@ -49,14 +55,26 @@ function App() {
 
   return (
     <main className="app-shell">
-      <section className="hero-card">
+      <header className="topbar">
         <div>
           <p className="eyebrow">Study App</p>
           <h1>学習の流れを1画面で整える。</h1>
+        </div>
+        <div className="topbar-badge">GitHub / Vercel ready</div>
+      </header>
+
+      <section className="hero-card">
+        <div className="hero-copy-wrap">
           <p className="hero-copy">
             今日やること、進捗、集中時間をまとめて見られるシンプルな
             学習ダッシュボードです。
           </p>
+          <div className="hero-actions">
+            <button type="button" className="primary-action">
+              25分集中を開始
+            </button>
+            <span className="ghost-note">次の小さな一歩をすぐ始める</span>
+          </div>
         </div>
 
         <div className="hero-metrics">
@@ -117,8 +135,22 @@ function App() {
             <p>学習メモ</p>
             <strong>終わったら内容を1行で振り返る。</strong>
           </div>
+
+          <div className="schedule-box">
+            <p>今日の予定</p>
+            <ul>
+              {upcomingStudy.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </div>
         </aside>
       </section>
+
+      <footer className="footer-note">
+        <span>小さく積み上げる学習管理</span>
+        <span>Last updated for GitHub and Vercel deployment</span>
+      </footer>
     </main>
   )
 }

@@ -23,4 +23,9 @@ npm run build
 
 ## 公開
 
-GitHub Pages 用のビルド設定を入れてあるので、`study-app` リポジトリの Pages 設定で GitHub Actions を有効にすれば公開できます。
+- GitHub Pages: [https://taishi1006-del.github.io/study-app/](https://taishi1006-del.github.io/study-app/)
+- Vercel: デプロイ後にここへ公開URLを追記してください
+
+## 補足
+
+Vercel では GitHub リポジトリ `study-app` を接続し、`main` ブランチをデプロイ対象にすると自動公開できます。

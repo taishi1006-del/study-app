@@ -1,17 +1,38 @@
-﻿.app-shell {
+.app-shell {
   min-height: 100vh;
-  padding: 32px;
+  padding: 28px 32px 24px;
   display: grid;
-  gap: 24px;
+  gap: 20px;
   align-content: start;
   max-width: 1120px;
   margin: 0 auto;
 }
 
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.topbar h1 {
+  margin-bottom: 0;
+}
+
+.topbar-badge {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #d8e7ff;
+  white-space: nowrap;
+}
+
 .hero-card,
 .panel {
   border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(8, 15, 28, 0.72);
+  background:
+    linear-gradient(180deg, rgba(17, 27, 49, 0.92), rgba(8, 15, 28, 0.74));
   backdrop-filter: blur(18px);
   box-shadow: 0 24px 80px rgba(2, 8, 20, 0.45);
 }
@@ -20,8 +41,37 @@
   border-radius: 28px;
   padding: 32px;
   display: grid;
-  gap: 24px;
+  gap: 22px;
   grid-template-columns: 1.4fr 1fr;
+}
+
+.hero-copy-wrap {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.primary-action {
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 18px;
+  background: linear-gradient(90deg, #7eb6ff, #65f0c8);
+  color: #07111f;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 12px 30px rgba(101, 240, 200, 0.22);
+}
+
+.ghost-note {
+  color: rgba(244, 247, 251, 0.72);
+  font-size: 0.95rem;
 }
 
 .eyebrow,
@@ -63,7 +113,8 @@ h1 {
 
 .metric-card,
 .focus-box,
-.tip-box {
+.tip-box,
+.schedule-box {
   border-radius: 20px;
   padding: 18px 20px;
   background: rgba(255, 255, 255, 0.05);
@@ -72,7 +123,8 @@ h1 {
 
 .metric-card span,
 .focus-box span,
-.tip-box p {
+.tip-box p,
+.schedule-box p {
   display: block;
   color: rgba(244, 247, 251, 0.6);
   margin-bottom: 8px;
@@ -181,8 +233,26 @@ h1 {
   background: linear-gradient(180deg, rgba(126, 182, 255, 0.2), rgba(101, 240, 200, 0.12));
 }
 
+.schedule-box ul {
+  margin: 0;
+  padding-left: 18px;
+  color: rgba(244, 247, 251, 0.88);
+  display: grid;
+  gap: 8px;
+}
+
 .tip-box strong {
   font-size: 1.15rem;
+}
+
+.footer-note {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: rgba(244, 247, 251, 0.58);
+  font-size: 0.92rem;
+  padding: 4px 4px 0;
 }
 
 @media (max-width: 880px) {
@@ -190,9 +260,14 @@ h1 {
     padding: 18px;
   }
 
+  .topbar,
   .hero-card,
   .content-grid {
     grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    align-items: start;
   }
 
   .panel-header {
