@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 
 const defaultStudyTypes = [
@@ -42,6 +42,13 @@ const formatMinutes = (minutes) => {
   return `${hours}時間${rest ? ` ${rest}分` : ''}`
 }
 
+const formatTimer = (seconds) => {
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  const rest = seconds % 60
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(rest).padStart(2, '0')}`
+}
+
 const getLast7Days = () => {
   const today = new Date('2026-06-23T00:00:00')
   return Array.from({ length: 7 }, (_, index) => {
@@ -60,6 +67,12 @@ const getReadableTextColor = (hexColor) => {
   return brightness > 155 ? '#07111f' : '#ffffff'
 }
 
+const parseGoalMinutes = (hoursText, minutesText) => {
+  const hours = Number(hoursText) || 0
+  const minutes = Number(minutesText) || 0
+  return Math.max(1, hours * 60 + minutes)
+}
+
 function App() {
   const [studyTypes, setStudyTypes] = useState(defaultStudyTypes)
   const [logs, setLogs] = useState(initialLogs)
@@ -68,7 +81,11 @@ function App() {
   const [minutes, setMinutes] = useState('30')
   const [newStudyLabel, setNewStudyLabel] = useState('')
   const [pickedColor, setPickedColor] = useState(palette[0])
-  const [goalMinutes, setGoalMinutes] = useState('300')
+  const [goalHours, setGoalHours] = useState('5')
+  const [goalMins, setGoalMins] = useState('0')
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  const [timerRunning, setTimerRunning] = useState(false)
+  const timerRef = useRef(null)
 
   const studyTypeMap = useMemo(() => buildStudyTypeMap(studyTypes), [studyTypes])
 
@@ -114,8 +131,20 @@ function App() {
   const selectedSubjectColor =
     studyTypeMap[selectedSubject]?.color ?? '#64748b'
 
-  const goalValue = Number(goalMinutes) || 300
-  const progress = Math.min(100, Math.round((totalMinutes / goalValue) * 100))
+  const goalMinutes = parseGoalMinutes(goalHours, goalMins)
+  const progress = Math.min(100, Math.round((totalMinutes / goalMinutes) * 100))
+
+  useEffect(() => {
+    if (!timerRunning) return undefined
+
+    timerRef.current = window.setInterval(() => {
+      setElapsedSeconds((current) => current + 1)
+    }, 1000)
+
+    return () => {
+      window.clearInterval(timerRef.current)
+    }
+  }, [timerRunning])
 
   const handleAddLog = (event) => {
     event.preventDefault()
@@ -141,6 +170,19 @@ function App() {
     setStudyTypes((current) => [...current, { value, label, color: pickedColor }])
     setSelectedSubject(value)
     setNewStudyLabel('')
+  }
+
+  const startTimer = () => {
+    if (!timerRunning) setTimerRunning(true)
+  }
+
+  const pauseTimer = () => {
+    setTimerRunning(false)
+  }
+
+  const resetTimer = () => {
+    setTimerRunning(false)
+    setElapsedSeconds(0)
   }
 
   return (
@@ -172,7 +214,7 @@ function App() {
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: '1.1fr 1fr 110px auto',
+                gridTemplateColumns: '1.2fr 1fr 110px auto',
                 gap: '8px',
               }}
             >
@@ -333,13 +375,29 @@ function App() {
             onSubmit={(event) => event.preventDefault()}
           >
             <span className="section-label">目標進捗</span>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '8px' }}>
               <input
                 type="number"
-                min="1"
-                step="10"
-                value={goalMinutes}
-                onChange={(event) => setGoalMinutes(event.target.value)}
+                min="0"
+                step="1"
+                value={goalHours}
+                onChange={(event) => setGoalHours(event.target.value)}
+                placeholder="h"
+                style={{
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  background: 'rgba(255,255,255,0.05)',
+                  color: 'inherit',
+                  padding: '12px 14px',
+                }}
+              />
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={goalMins}
+                onChange={(event) => setGoalMins(event.target.value)}
+                placeholder="min"
                 style={{
                   borderRadius: '12px',
                   border: '1px solid rgba(255,255,255,0.15)',
@@ -361,7 +419,7 @@ function App() {
               </div>
             </div>
             <small style={{ color: 'rgba(244,247,251,0.7)' }}>
-              ここで目標分数を変えると、進捗率も自動で変わります。
+              h と min で目標を入力すると、進捗率が自動で変わります。
             </small>
           </form>
 
@@ -378,6 +436,47 @@ function App() {
           <div className="tip-box">
             <p>連続記録</p>
             <strong>{streakDays}日連続で記録されています。</strong>
+          </div>
+
+          <div
+            className="focus-box"
+            style={{
+              borderColor: `${selectedSubjectColor}55`,
+              background: 'rgba(255,255,255,0.04)',
+              display: 'grid',
+              gap: '12px',
+            }}
+          >
+            <span>勉強タイマー</span>
+            <strong style={{ fontSize: '2rem', letterSpacing: '0.05em' }}>
+              {formatTimer(elapsedSeconds)}
+            </strong>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className="primary-action"
+                onClick={startTimer}
+                style={{ padding: '10px 14px' }}
+              >
+                開始
+              </button>
+              <button
+                type="button"
+                className="primary-action"
+                onClick={pauseTimer}
+                style={{ padding: '10px 14px' }}
+              >
+                一時停止
+              </button>
+              <button
+                type="button"
+                className="primary-action"
+                onClick={resetTimer}
+                style={{ padding: '10px 14px' }}
+              >
+                リセット
+              </button>
+            </div>
           </div>
 
           <div className="schedule-box">
