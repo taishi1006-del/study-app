@@ -49,6 +49,8 @@ const formatTimer = (seconds) => {
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(rest).padStart(2, '0')}`
 }
 
+const formatGoalLabel = (hours, mins) => `${Number(hours) || 0}h ${Number(mins) || 0}min`
+
 const getLast7Days = () => {
   const today = new Date('2026-06-23T00:00:00')
   return Array.from({ length: 7 }, (_, index) => {
@@ -130,6 +132,7 @@ function App() {
 
   const selectedSubjectColor =
     studyTypeMap[selectedSubject]?.color ?? '#64748b'
+  const selectedSubjectTextColor = getReadableTextColor(selectedSubjectColor)
 
   const goalMinutes = parseGoalMinutes(goalHours, goalMins)
   const progress = Math.min(100, Math.round((totalMinutes / goalMinutes) * 100))
@@ -347,96 +350,6 @@ function App() {
               </span>
             </div>
           </form>
-        </div>
-
-        <aside
-          className="panel panel-side"
-          style={{
-            display: 'grid',
-            gap: '16px',
-            alignContent: 'start',
-          }}
-        >
-          <p className="section-label">Focus</p>
-          <h2>数字で見える化</h2>
-          <p className="side-copy">
-            学習記録は数字だけでまとめています。種類の色は、文字が見やすいように自動で調整します。
-          </p>
-
-          <form
-            style={{
-              display: 'grid',
-              gap: '8px',
-              padding: '14px',
-              borderRadius: '20px',
-              border: `1px solid ${selectedSubjectColor}55`,
-              background: `${selectedSubjectColor}12`,
-            }}
-            onSubmit={(event) => event.preventDefault()}
-          >
-            <span className="section-label">目標進捗</span>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '8px' }}>
-              <input
-                type="number"
-                min="0"
-                step="1"
-                value={goalHours}
-                onChange={(event) => setGoalHours(event.target.value)}
-                placeholder="h"
-                style={{
-                  borderRadius: '12px',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  background: 'rgba(255,255,255,0.05)',
-                  color: 'inherit',
-                  padding: '12px 14px',
-                }}
-              />
-              <input
-                type="number"
-                min="0"
-                step="1"
-                value={goalMins}
-                onChange={(event) => setGoalMins(event.target.value)}
-                placeholder="min"
-                style={{
-                  borderRadius: '12px',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  background: 'rgba(255,255,255,0.05)',
-                  color: 'inherit',
-                  padding: '12px 14px',
-                }}
-              />
-              <div
-                className="progress-pill"
-                style={{
-                  background: `${selectedSubjectColor}22`,
-                  color: selectedSubjectColor,
-                  border: `1px solid ${selectedSubjectColor}55`,
-                  alignSelf: 'center',
-                }}
-              >
-                {progress}%
-              </div>
-            </div>
-            <small style={{ color: 'rgba(244,247,251,0.7)' }}>
-              h と min で目標を入力すると、進捗率が自動で変わります。
-            </small>
-          </form>
-
-          <div className="focus-box" style={{ borderColor: `${selectedSubjectColor}55`, background: `${selectedSubjectColor}18` }}>
-            <span>総合学習時間</span>
-            <strong>{formatMinutes(totalMinutes)}</strong>
-          </div>
-
-          <div className="tip-box">
-            <p>学習日数</p>
-            <strong>{studyDays}日分の記録があります。</strong>
-          </div>
-
-          <div className="tip-box">
-            <p>連続記録</p>
-            <strong>{streakDays}日連続で記録されています。</strong>
-          </div>
 
           <div
             className="focus-box"
@@ -445,6 +358,7 @@ function App() {
               background: 'rgba(255,255,255,0.04)',
               display: 'grid',
               gap: '12px',
+              marginTop: '12px',
             }}
           >
             <span>勉強タイマー</span>
@@ -478,6 +392,96 @@ function App() {
               </button>
             </div>
           </div>
+        </div>
+
+        <aside
+          className="panel panel-side"
+          style={{
+            display: 'grid',
+            gap: '14px',
+            alignContent: 'start',
+          }}
+        >
+          <p className="section-label">Focus</p>
+          <h2>数字で見える化</h2>
+          <p className="side-copy">
+            学習記録は数字だけでまとめています。種類の色は、文字が見やすいように自動で調整します。
+          </p>
+
+          <form
+            style={{
+              display: 'grid',
+              gap: '8px',
+              padding: '14px',
+              borderRadius: '20px',
+              border: `1px solid ${selectedSubjectColor}55`,
+              background: `${selectedSubjectColor}12`,
+            }}
+            onSubmit={(event) => event.preventDefault()}
+          >
+            <span className="section-label">目標進捗</span>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr auto', gap: '8px', alignItems: 'center' }}>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={goalHours}
+                onChange={(event) => setGoalHours(event.target.value)}
+                style={{
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  background: 'rgba(255,255,255,0.05)',
+                  color: 'inherit',
+                  padding: '12px 14px',
+                }}
+              />
+              <span style={{ color: 'rgba(244,247,251,0.8)', fontWeight: 700 }}>h</span>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={goalMins}
+                onChange={(event) => setGoalMins(event.target.value)}
+                style={{
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  background: 'rgba(255,255,255,0.05)',
+                  color: 'inherit',
+                  padding: '12px 14px',
+                }}
+              />
+              <span style={{ color: 'rgba(244,247,251,0.8)', fontWeight: 700 }}>min</span>
+            </div>
+            <div
+              className="progress-pill"
+              style={{
+                background: `${selectedSubjectColor}22`,
+                color: selectedSubjectColor,
+                border: `1px solid ${selectedSubjectColor}55`,
+                width: 'fit-content',
+              }}
+            >
+              {progress}% / {formatGoalLabel(goalHours, goalMins)}
+            </div>
+            <small style={{ color: 'rgba(244,247,251,0.7)' }}>
+              h と min を数字の後ろに付けて表示しています。
+            </small>
+          </form>
+
+          <div className="focus-box" style={{ borderColor: `${selectedSubjectColor}55`, background: `${selectedSubjectColor}18` }}>
+            <span>総合学習時間</span>
+            <strong>{formatMinutes(totalMinutes)}</strong>
+          </div>
+
+          <div className="tip-box">
+            <p>学習日数</p>
+            <strong>{studyDays}日分の記録があります。</strong>
+          </div>
+
+          <div className="tip-box">
+            <p>連続記録</p>
+            <strong>{streakDays}日連続で記録されています。</strong>
+          </div>
 
           <div className="schedule-box">
             <p>色分けされた種類</p>
@@ -487,6 +491,20 @@ function App() {
                   {item.label}
                 </li>
               ))}
+            </ul>
+          </div>
+
+          <div className="schedule-box">
+            <p>学習時間の内訳</p>
+            <ul>
+              {Object.entries(subjectSummary).map(([subject, minutesValue]) => {
+                const item = studyTypeMap[subject]
+                return (
+                  <li key={subject} style={{ color: item?.color ?? '#ffffff' }}>
+                    {item?.label ?? subject} - {formatMinutes(minutesValue)}
+                  </li>
+                )
+              })}
             </ul>
           </div>
         </aside>
@@ -585,22 +603,26 @@ function App() {
 
         <aside className="panel panel-side">
           <p className="section-label">Subject</p>
-          <h2>種類別の合計</h2>
+          <h2>最近の記録</h2>
           <p className="side-copy">
             どの教科にどれだけ時間を使ったかを、数字で見られるようにしています。
           </p>
 
           <div className="schedule-box">
-            <p>学習時間の内訳</p>
+            <p>直近の入力</p>
             <ul>
-              {Object.entries(subjectSummary).map(([subject, minutesValue]) => {
-                const item = studyTypeMap[subject]
-                return (
-                  <li key={subject} style={{ color: item?.color ?? '#ffffff' }}>
-                    {item?.label ?? subject} - {formatMinutes(minutesValue)}
-                  </li>
-                )
-              })}
+              {logs
+                .slice()
+                .sort((a, b) => b.date.localeCompare(a.date))
+                .slice(0, 5)
+                .map((log) => {
+                  const item = studyTypeMap[log.subject]
+                  return (
+                    <li key={`${log.date}-${log.subject}`} style={{ color: item?.color ?? '#ffffff' }}>
+                      {log.date} - {item?.label ?? log.subject} / {formatMinutes(log.minutes)}
+                    </li>
+                  )
+                })}
             </ul>
           </div>
         </aside>
