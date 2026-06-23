@@ -68,6 +68,7 @@ function App() {
   const [minutes, setMinutes] = useState('30')
   const [newStudyLabel, setNewStudyLabel] = useState('')
   const [pickedColor, setPickedColor] = useState(palette[0])
+  const [goalMinutes, setGoalMinutes] = useState('300')
 
   const studyTypeMap = useMemo(() => buildStudyTypeMap(studyTypes), [studyTypes])
 
@@ -103,8 +104,18 @@ function App() {
     })
   }, [logs])
 
+  const subjectSummary = useMemo(() => {
+    return logs.reduce((acc, log) => {
+      acc[log.subject] = (acc[log.subject] ?? 0) + log.minutes
+      return acc
+    }, {})
+  }, [logs])
+
   const selectedSubjectColor =
     studyTypeMap[selectedSubject]?.color ?? '#64748b'
+
+  const goalValue = Number(goalMinutes) || 300
+  const progress = Math.min(100, Math.round((totalMinutes / goalValue) * 100))
 
   const handleAddLog = (event) => {
     event.preventDefault()
@@ -127,15 +138,10 @@ function App() {
     const value = label.toLowerCase().replace(/\s+/g, '-')
     if (studyTypeMap[value]) return
 
-    setStudyTypes((current) => [
-      ...current,
-      { value, label, color: pickedColor },
-    ])
+    setStudyTypes((current) => [...current, { value, label, color: pickedColor }])
     setSelectedSubject(value)
     setNewStudyLabel('')
   }
-
-  const progress = Math.min(100, Math.round((totalMinutes / 300) * 100))
 
   return (
     <main className="app-shell">
@@ -147,7 +153,10 @@ function App() {
         <div className="topbar-badge">GitHub / Vercel ready</div>
       </header>
 
-      <section className="hero-card">
+      <section
+        className="hero-card"
+        style={{ gridTemplateColumns: '1.55fr 0.95fr', alignItems: 'start' }}
+      >
         <div className="hero-copy-wrap">
           <p className="hero-copy">
             日ごとの入力をためるだけで、学習時間・学習日数・連続記録を
@@ -156,7 +165,7 @@ function App() {
 
           <form
             onSubmit={handleAddLog}
-            style={{ display: 'grid', gap: '10px', maxWidth: '560px' }}
+            style={{ display: 'grid', gap: '10px', maxWidth: '680px' }}
           >
             <span className="section-label">カレンダー入力</span>
 
@@ -239,7 +248,7 @@ function App() {
 
           <form
             onSubmit={handleAddStudyType}
-            style={{ display: 'grid', gap: '10px', maxWidth: '560px' }}
+            style={{ display: 'grid', gap: '10px', maxWidth: '680px', marginTop: '8px' }}
           >
             <span className="section-label">勉強の種類を追加</span>
             <div
@@ -298,20 +307,90 @@ function App() {
           </form>
         </div>
 
-        <div className="hero-metrics">
-          <article className="metric-card">
-            <span>総学習時間</span>
+        <aside
+          className="panel panel-side"
+          style={{
+            display: 'grid',
+            gap: '16px',
+            alignContent: 'start',
+          }}
+        >
+          <p className="section-label">Focus</p>
+          <h2>数字で見える化</h2>
+          <p className="side-copy">
+            学習記録は数字だけでまとめています。種類の色は、文字が見やすいように自動で調整します。
+          </p>
+
+          <form
+            style={{
+              display: 'grid',
+              gap: '8px',
+              padding: '14px',
+              borderRadius: '20px',
+              border: `1px solid ${selectedSubjectColor}55`,
+              background: `${selectedSubjectColor}12`,
+            }}
+            onSubmit={(event) => event.preventDefault()}
+          >
+            <span className="section-label">目標進捗</span>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '8px' }}>
+              <input
+                type="number"
+                min="1"
+                step="10"
+                value={goalMinutes}
+                onChange={(event) => setGoalMinutes(event.target.value)}
+                style={{
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  background: 'rgba(255,255,255,0.05)',
+                  color: 'inherit',
+                  padding: '12px 14px',
+                }}
+              />
+              <div
+                className="progress-pill"
+                style={{
+                  background: `${selectedSubjectColor}22`,
+                  color: selectedSubjectColor,
+                  border: `1px solid ${selectedSubjectColor}55`,
+                  alignSelf: 'center',
+                }}
+              >
+                {progress}%
+              </div>
+            </div>
+            <small style={{ color: 'rgba(244,247,251,0.7)' }}>
+              ここで目標分数を変えると、進捗率も自動で変わります。
+            </small>
+          </form>
+
+          <div className="focus-box" style={{ borderColor: `${selectedSubjectColor}55`, background: `${selectedSubjectColor}18` }}>
+            <span>総合学習時間</span>
             <strong>{formatMinutes(totalMinutes)}</strong>
-          </article>
-          <article className="metric-card">
-            <span>学習日数</span>
-            <strong>{studyDays}日</strong>
-          </article>
-          <article className="metric-card">
-            <span>連続記録</span>
-            <strong>{streakDays}日</strong>
-          </article>
-        </div>
+          </div>
+
+          <div className="tip-box">
+            <p>学習日数</p>
+            <strong>{studyDays}日分の記録があります。</strong>
+          </div>
+
+          <div className="tip-box">
+            <p>連続記録</p>
+            <strong>{streakDays}日連続で記録されています。</strong>
+          </div>
+
+          <div className="schedule-box">
+            <p>色分けされた種類</p>
+            <ul>
+              {studyTypes.map((item) => (
+                <li key={item.value} style={{ color: item.color }}>
+                  {item.label}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </aside>
       </section>
 
       <section className="content-grid">
@@ -406,36 +485,23 @@ function App() {
         </article>
 
         <aside className="panel panel-side">
-          <p className="section-label">Focus</p>
-          <h2>数字で見える化</h2>
+          <p className="section-label">Subject</p>
+          <h2>種類別の合計</h2>
           <p className="side-copy">
-            学習記録は数字だけでまとめています。種類の色は、文字が見やすいように自動で反転します。
+            どの教科にどれだけ時間を使ったかを、数字で見られるようにしています。
           </p>
 
-          <div
-            className="focus-box"
-            style={{
-              borderColor: `${selectedSubjectColor}55`,
-              background: `${selectedSubjectColor}18`,
-            }}
-          >
-            <span>合計の見え方</span>
-            <strong>{formatMinutes(totalMinutes)}</strong>
-          </div>
-
-          <div className="tip-box">
-            <p>学習日数</p>
-            <strong>{studyDays}日分の記録があります。</strong>
-          </div>
-
           <div className="schedule-box">
-            <p>色分けされた種類</p>
+            <p>学習時間の内訳</p>
             <ul>
-              {studyTypes.map((item) => (
-                <li key={item.value} style={{ color: item.color }}>
-                  {item.label}
-                </li>
-              ))}
+              {Object.entries(subjectSummary).map(([subject, minutesValue]) => {
+                const item = studyTypeMap[subject]
+                return (
+                  <li key={subject} style={{ color: item?.color ?? '#ffffff' }}>
+                    {item?.label ?? subject} - {formatMinutes(minutesValue)}
+                  </li>
+                )
+              })}
             </ul>
           </div>
         </aside>
